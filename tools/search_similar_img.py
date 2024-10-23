@@ -5,6 +5,7 @@ from transformers import AutoImageProcessor, AutoModel, AutoProcessor, CLIPModel
 from PIL import Image
 from pathlib import Path 
 from tqdm import tqdm
+from collections import defaultdict
 import os, shutil
 
 
@@ -95,6 +96,9 @@ if __name__ == "__main__":
     # faiss.write_index(index_dino,result_path + "matched_dino.index")
 
     # Input image
+    clip_result_txt_file = open(result_path + 'clip_rankLists.txt', 'w')
+    dino_result_txt_file = open(result_path + 'dino_rankLists.txt', 'w')
+    clip_result_dict, dino_result_dict = defaultdict(list), defaultdict(list)
     for source_idx, source_img_path in tqdm(enumerate(source_imgs_path)):
         source_image = Image.open(source_img_path)
         source_clip_features = extract_features_clip(source_image, processor_clip, model_clip)
@@ -109,10 +113,31 @@ if __name__ == "__main__":
         # Get distance and indexes of images associated
         d_dino, i_dino = index_dino.search(source_dino_features, 10)
         d_clip, i_clip = index_clip.search(source_clip_features, 10)
-
+        i_clip_str, i_dino_str = [], []
+        for c in i_clip[0]:
+            matched_image_path = all_matched_imgs_path[c]
+            matched_file_name = Path(matched_image_path).name.split('.')[0]
+            i_clip_str.append(matched_file_name)
+        for d in i_dino[0]:
+            matched_image_path = all_matched_imgs_path[d]
+            matched_file_name = Path(matched_image_path).name.split('.')[0]
+            i_dino_str.append(matched_file_name)
+        source_name = source_img_path.name.split('.')[0]
+        clip_result_dict[source_name] = i_clip_str
+        dino_result_dict[source_name] = i_dino_str
+        # import pdb; pdb.set_trace()
         # visualization
-        copy_similar_images(i_dino[0], d_dino[0], source_img_path, all_matched_imgs_path, result_path + '/dino/')
-        copy_similar_images(i_clip[0], d_clip[0], source_img_path, all_matched_imgs_path, result_path + '/clip/')
+        # copy_similar_images(i_dino[0], d_dino[0], source_img_path, all_matched_imgs_path, result_path + '/dino/')
+        # copy_similar_images(i_clip[0], d_clip[0], source_img_path, all_matched_imgs_path, result_path + '/clip/')
+for i in range(0, 50):
+    i = str(i)
+    i_clip_str = clip_result_dict[i]
+    i_dino_str = dino_result_dict[i]
+    clip_index_txt = ' '.join(i_clip_str)
+    dino_index_txt = ' '.join(i_dino_str)
+    clip_result_txt_file.write(clip_index_txt + '\n')
+    dino_result_txt_file.write(dino_index_txt + '\n')
 
-    
+clip_result_txt_file.close()
+dino_result_txt_file.close()
 
