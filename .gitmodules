@@ -1,0 +1,9 @@
+[submodule "tools/GroundingDINO"]
+	path = tools/GroundingDINO
+	url = https://github.com/IDEA-Research/GroundingDINO.git
+[submodule "tools/mmdetection"]
+	path = tools/mmdetection
+	url = https://github.com/open-mmlab/mmdetection.git
+[submodule "tools/segment-anything"]
+	path = tools/segment-anything
+	url = https://github.com/facebookresearch/segment-anything.git
